@@ -57,12 +57,16 @@ jobs:
 
     - name: 📁 Inicializar Terraform
       run: terraform init
+      working-directory: InfraK8s/terraform
 
     - name: 🧪 Validar Terraform
-      run: terraform validate   
+      run: terraform validate
+      working-directory: InfraK8s/terraform
 
     - name: 📋 Planejar Terraform
       run: terraform plan -out=tfplan
+      working-directory: InfraK8s/terraform
 
     - name: 🚀 Aplicar Terraform
       run: terraform apply -auto-approve tfplan
+      working-directory: InfraK8s/terraform
