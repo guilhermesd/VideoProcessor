@@ -1,4 +1,6 @@
-﻿using System;
+﻿using MongoDB.Bson.Serialization.Attributes;
+using MongoDB.Bson;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -16,12 +18,19 @@ namespace Domain.Entities
 
     public class VideoJob
     {
+        [BsonId]
+        [BsonRepresentation(BsonType.String)]
         public Guid Id { get; set; }
+
+        [BsonRepresentation(BsonType.String)]
         public Guid UserId { get; set; }
         public string FileName { get; set; } = string.Empty;
         public string Status { get; set; } = VideoStatus.Pending;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public User User { get; set; }
+        
+        public DateTime? ProcessedAt { get; set; }
+        public string? OutputFile { get; set; }
     }
 }

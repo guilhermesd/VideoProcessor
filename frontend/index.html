@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Video Processor</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { padding: 2rem; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎥 Video Processor</h1>
+
+        <!-- Seções de Login / Cadastro -->
+        <div id="authSection">
+            <ul class="nav nav-tabs">
+                <li class="nav-item">
+                    <a class="nav-link active" href="#" onclick="showTab('login')">Login</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" onclick="showTab('register')">Cadastro</a>
+                </li>
+            </ul>
+
+            <div id="loginTab">
+                <h3>Login</h3>
+                <input id="email" class="form-control mb-2" placeholder="Email">
+                <input id="password" type="password" class="form-control mb-2" placeholder="Senha">
+                <button class="btn btn-primary" onclick="login()">Entrar</button>
+            </div>
+
+            <div id="registerTab" class="hidden">
+                <h3>Cadastro</h3>
+                <input id="regEmail" class="form-control mb-2" placeholder="Email">
+                <input id="regPassword" type="password" class="form-control mb-2" placeholder="Senha">
+                <button class="btn btn-success" onclick="register()">Cadastrar</button>
+            </div>
+        </div>
+
+        <!-- Upload e Lista -->
+        <div id="appSection" class="hidden">
+            <h3 class="mt-4">Upload de Vídeo</h3>
+            <input type="file" id="videoFile" class="form-control mb-2">
+            <button class="btn btn-primary" onclick="upload()">Enviar</button>
+
+            <h3 class="mt-5">Seus Vídeos</h3>
+            <table class="table table-bordered mt-2">
+                <thead>
+                    <tr>
+                        <th>Arquivo</th>
+                        <th>Status</th>
+                        <th>Processado em</th>
+                        <th>Download</th>
+                    </tr>
+                </thead>
+                <tbody id="videosTable">
+                    <tr><td colspan="4">Carregando...</td></tr>
+                </tbody>
+            </table>
+
+            <div class="text-end mb-2">
+            <small>Atualizando em <span id="contador">10</span> segundos...</small>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const api = "/api";
+        let token = "";
+
+        function showTab(tab) {
+            document.getElementById("loginTab").classList.add("hidden");
+            document.getElementById("registerTab").classList.add("hidden");
+            document.getElementById(tab + "Tab").classList.remove("hidden");
+            document.querySelectorAll(".nav-link").forEach(el => el.classList.remove("active"));
+            document.querySelector(`.nav-link[href="#"][onclick*="${tab}"]`).classList.add("active");
+        }
+
+        async function login() {
+            const res = await fetch(`${api}/auth/login`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    email: document.getElementById("email").value,
+                    password: document.getElementById("password").value
+                })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                token = data.token;
+                document.getElementById("authSection").classList.add("hidden");
+                document.getElementById("appSection").classList.remove("hidden");
+                loadVideos();
+                setInterval(loadVideos, 10000); // Atualiza a lista a cada 10s
+            } else {
+                alert(data.message || "Erro no login");
+            }
+        }
+
+        async function register() {
+            const res = await fetch(`${api}/auth/register`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    email: document.getElementById("regEmail").value,
+                    password: document.getElementById("regPassword").value
+                })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                alert("Cadastro realizado com sucesso");
+                showTab("login");
+            } else {
+                alert(data.message || "Erro ao cadastrar");
+            }
+        }
+
+        async function upload() {
+            const file = document.getElementById("videoFile").files[0];
+            if (!file) return alert("Selecione um arquivo");
+
+            const formData = new FormData();
+            formData.append("file", file);
+
+            const res = await fetch(`${api}/videos/upload`, {
+                method: "POST",
+                headers: { Authorization: `Bearer ${token}` },
+                body: formData
+            });
+
+            if (res.ok) {
+                alert("Vídeo enviado com sucesso");
+                loadVideos();
+            } else {
+                alert("Erro no upload");
+            }
+        }
+
+        async function loadVideos() {
+            const res = await fetch(`${api}/videos/me`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            const table = document.getElementById("videosTable");
+            if (!res.ok) {
+                table.innerHTML = `<tr><td colspan="4">Erro ao carregar vídeos</td></tr>`;
+                return;
+            }
+
+            const videos = await res.json();
+            table.innerHTML = "";
+
+            if (videos.length === 0) {
+                table.innerHTML = `<tr><td colspan="4">Nenhum vídeo enviado</td></tr>`;
+                return;
+            }
+
+            for (const v of videos) {
+                const downloadLink = v.outputFile
+                    ? `<a href="/api/videos/download/${v.outputFile}" class="btn btn-sm btn-outline-success">Baixar</a>`
+                    : "-";
+                table.innerHTML += `
+                    <tr>
+                        <td>${v.fileName}</td>
+                        <td>${v.status}</td>
+                        <td>${v.processedAt ? new Date(v.processedAt).toLocaleString() : "-"}</td>
+                        <td>${downloadLink}</td>
+                    </tr>
+                `;
+            }
+        }
+
+let countdown = 10;
+const contadorSpan = document.getElementById("contador");
+
+// Função que atualiza a lista
+async function carregarVideos() {
+    const res = await fetch("/api/videos/me", {
+        headers: {
+            "Authorization": "Bearer " + localStorage.getItem("token")
+        }
+    });
+
+    if (!res.ok) {
+        document.getElementById("lista-videos").innerHTML = `<tr><td colspan="4">Erro ao buscar vídeos</td></tr>`;
+        return;
+    }
+
+    const videos = await res.json();
+    const html = videos.map(v => {
+        const data = v.processedAt ? new Date(v.processedAt).toLocaleString() : "-";
+        const downloadLink = v.outputFile
+            ? `<a href="/api/videos/download/${v.outputFile}" class="btn btn-sm btn-outline-success">Baixar</a>`
+            : "-";
+
+        return `
+            <tr>
+                <td>${v.fileName}</td>
+                <td>${v.status}</td>
+                <td>${data}</td>
+                <td>${downloadLink}</td>
+            </tr>
+        `;
+    }).join("");
+
+    document.getElementById("lista-videos").innerHTML = html;
+}
+
+// Função do contador regressivo
+function iniciarContador() {
+    countdown = 10;
+    contadorSpan.innerText = countdown;
+    const intervalo = setInterval(() => {
+        countdown--;
+        contadorSpan.innerText = countdown;
+
+        if (countdown === 0) {
+            clearInterval(intervalo);
+            carregarVideos();
+            iniciarContador();
+        }
+    }, 1000);
+}
+
+// Chamar a primeira vez
+carregarVideos();
+iniciarContador();
+
+    </script>
+</body>
+</html>

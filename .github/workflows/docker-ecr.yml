@@ -1,4 +1,4 @@
-name: Build and Push Docker image to Amazon ECR
+name: Build and Push Docker images to Amazon ECR
 
 on:
   push:
@@ -39,15 +39,22 @@ jobs:
     - name: Create ECR repositories if not exist
       run: |
         aws ecr describe-repositories --repository-names servicopagamentos-repo || aws ecr create-repository --repository-name servicopagamentos-repo
+        aws ecr describe-repositories --repository-names servicopagamentos-worker || aws ecr create-repository --repository-name servicopagamentos-worker
 
-    - name: Build Docker image
+    - name: Build API image
       run: |
         docker build -f Api/Dockerfile -t servicopagamentos:${{ env.IMAGE_TAG }} .
 
-    - name: Tag Docker image
+    - name: Tag and Push API image
       run: |
         docker tag servicopagamentos:${{ env.IMAGE_TAG }} 100527548163.dkr.ecr.us-east-1.amazonaws.com/servicopagamentos-repo:${{ env.IMAGE_TAG }}
-
-    - name: Push to Amazon ECR 
-      run: |
         docker push 100527548163.dkr.ecr.us-east-1.amazonaws.com/servicopagamentos-repo:${{ env.IMAGE_TAG }}
+
+    - name: Build Worker image
+      run: |
+        docker build -f Worker/Dockerfile -t servicopagamentos-worker:${{ env.IMAGE_TAG }} .
+
+    - name: Tag and Push Worker image
+      run: |
+        docker tag servicopagamentos-worker:${{ env.IMAGE_TAG }} 100527548163.dkr.ecr.us-east-1.amazonaws.com/servicopagamentos-worker:${{ env.IMAGE_TAG }}
+        docker push 100527548163.dkr.ecr.us-east-1.amazonaws.com/servicopagamentos-worker:${{ env.IMAGE_TAG }}

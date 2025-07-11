@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: video-processor-worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: video-processor-worker
+  template:
+    metadata:
+      labels:
+        app: video-processor-worker
+    spec:
+      containers:
+        - name: worker
+          image: 100527548163.dkr.ecr.us-east-1.amazonaws.com/servicopagamentos-worker:latest
+          env:
+            - name: MongoDB__ConnectionString
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-secret
+                  key: connectionString
+            - name: MongoDB__DatabaseName
+              value: Pagamentos
+            - name: RabbitMq__Host
+              value: rabbitmq
+            - name: RabbitMq__UserName
+              valueFrom:
+                secretKeyRef:
+                  name: rabbitmq-secret
+                  key: username
+            - name: RabbitMq__Password
+              valueFrom:
+                secretKeyRef:
+                  name: rabbitmq-secret
+                  key: password
