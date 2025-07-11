@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: video-processor-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: video-processor-api
+  template:
+    metadata:
+      labels:
+        app: video-processor-api
+    spec:
+      containers:
+        - name: api
+          image: 100527548163.dkr.ecr.us-east-1.amazonaws.com/servicopagamentos-repo:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_ENVIRONMENT
+              value: "Development"
+            - name: MongoDB__ConnectionString
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-secret
+                  key: connectionString
+            - name: MongoDB__DatabaseName
+              value: Pagamentos
+            - name: Redis__Host
+              value: redis:6379
+            - name: RabbitMq__Host
+              value: rabbitmq
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: video-processor-api
+spec:
+  selector:
+    app: video-processor-api
+  ports:
+    - port: 8080
+      targetPort: 8080
+  type: LoadBalancer

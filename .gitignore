@@ -1,0 +1,80 @@
+# .NET & Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.DotSettings
+*.ncrunch*
+*.resharper*
+*.csproj.user
+
+# Build artifacts
+bin/
+obj/
+out/
+TestResults/
+*.log
+
+# Docker
+*.pid
+*.tar
+**/Dockerfile.*
+docker-compose.override.yml
+
+# Logs e arquivos temporários
+*.log
+*.tmp
+*.temp
+*.bak
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Icon?
+Desktop.ini
+
+# Rider IDE
+.idea/
+
+# VS Code
+.vscode/
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+crash.log
+*.tfvars
+*.tfplan
+*.backup
+
+# Testes e relatórios
+coverage/
+coverage.cobertura.xml
+*.coverage
+*.test.json
+*.trx
+
+# YAML gerados (opcional)
+*.generated.yaml
+
+# Ignore arquivos sensíveis ou locais
+secrets.yaml
+appsettings.Local.json
+appsettings.Development.Local.json
+
+# Node (se usar frontend juntos)
+node_modules/
+dist/
+
+# Python cache (caso scripts auxiliares)
+__pycache__/
+*.py[cod]
+
+# Excluir arquivos de lock específicos
+*.lock
+
+# Ignorar arquivos da pasta de estrutura
+estrutura.txt

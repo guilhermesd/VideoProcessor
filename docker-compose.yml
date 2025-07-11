@@ -1,0 +1,80 @@
+services:
+  api:
+    container_name: video-processor-api
+    build:
+      context: .
+      dockerfile: Api/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - MongoDB__ConnectionString=mongodb://root:example@mongo-video-service:27017
+      - MongoDB__DatabaseName=Pagamentos
+      - Redis__Host=redis:6379
+      - RabbitMq__Host=rabbitmq
+    depends_on:
+      - mongo-video-service
+      - redis
+      - rabbitmq
+    networks:
+      - video-processor-network
+
+  mongo-video-service:
+    image: mongo:7
+    container_name: mongo-video-service
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+    volumes:
+      - mongodbdata:/data/db
+    networks:
+      - video-processor-network
+
+  redis:
+    image: redis:7
+    container_name: video-processor-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - video-processor-network
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: video-processor-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
+    networks:
+      - video-processor-network
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./InfraK8s/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - video-processor-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    networks:
+      - video-processor-network
+
+volumes:
+  mongodbdata:
+
+networks:
+  video-processor-network:
