@@ -2,7 +2,7 @@ name: Deploy EKS and Kubernetes resources with Terraform
 
 on:
   workflow_run:
-    workflows: ["Build and Push Docker image to Amazon ECR"]
+    workflows: ["Build and Push Docker images to Amazon ECR"]
     types:
       - completed
 
