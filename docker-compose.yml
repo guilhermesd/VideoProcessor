@@ -16,6 +16,39 @@ services:
       - mongo-video-service
       - redis
       - rabbitmq
+    volumes:
+      - uploads-volume:/app/uploads      
+    networks:
+      - video-processor-network
+
+  worker:
+    container_name: video-processor-worker
+    build:
+      context: .
+      dockerfile: Worker/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - MongoDB__ConnectionString=mongodb://root:example@mongo-video-service:27017
+      - MongoDB__DatabaseName=Pagamentos
+      - RabbitMq__Host=rabbitmq
+      - RabbitMq__Username=admin
+      - RabbitMq__Password=admin      
+    depends_on:
+      - mongo-video-service
+      - rabbitmq
+    volumes:
+      - uploads-volume:/app/uploads      
+    networks:
+      - video-processor-network
+      
+  frontend:
+    build:
+      context: ./frontend
+    container_name: video-processor-frontend
+    ports:
+      - "3001:80"
+    depends_on:
+      - api
     networks:
       - video-processor-network
 
@@ -75,6 +108,7 @@ services:
 
 volumes:
   mongodbdata:
+  uploads-volume:
 
 networks:
   video-processor-network:

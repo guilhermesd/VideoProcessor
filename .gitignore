@@ -61,7 +61,7 @@ coverage.cobertura.xml
 *.generated.yaml
 
 # Ignore arquivos sensíveis ou locais
-secrets.yaml
+# secrets.yaml por enquanto
 appsettings.Local.json
 appsettings.Development.Local.json
 

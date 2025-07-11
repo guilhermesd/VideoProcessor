@@ -22,4 +22,9 @@ RUN dotnet publish "./Api.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:Use
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+
+# Cria diretório de uploads antes de definir ENTRYPOINT
+RUN mkdir -p /app/uploads
+VOLUME ["/app/uploads"]
+
 ENTRYPOINT ["dotnet", "Api.dll"]
